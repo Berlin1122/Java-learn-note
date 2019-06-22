@@ -65,5 +65,63 @@ public String hello(@PathVariable("itemId")long itemId){
 
 - **获取表单的参数值**：要获取表单的参数值，需要将表单的字段封装成对应的实体类，指定form标签的action属性，将其对应controller中的方法，在controller方法中，使用封装好的实体类作为形参，就可以接受表单的参数了。
 - **表单验证**：针对表单的验证方式，有很多方法，我觉得最好的方法还是在客户端进行验证，借助js逻辑进行验证，后端进行验证有点浪费资源。介绍一下书中提到的验证方式：书中使用注解对实体类的字段进行限制，这些注解通常来自第三方的API（比如Hibernate Validator）,有@Null、@Size、@Digits等，此外还需要在controller对应的方法的形参上开启验证(使用@Valid)，另外还要使用形参 Erros,验证的结果通过Errors的变量获取，根据是否满足要求做具体的逻辑跳转。
--
+
+#### 七、Maven + IDEA 搭建SpringMVC
+使用maven 是问了方便项目中对其他需要的jar包进行管理，所以这个方式只是其中一种。还可以在创建项目时直接选择SpringMVC框架。具体步骤如下：
+
+![例图](./resources/第一步.png)
+
+![例图](./resources/第二步.png)
+
+![例图](./resources/第三步.png)
+
+![例图](./resources/第四步.png)
+
+![例图](./resources/第五步.png)
+
+![例图](./resources/第六步.png)
+
+![例图](./resources/第七步.png)
+
+![例图](./resources/第八步.png)
+
+![例图](./resources/第九步.png)
+
+![例图](./resources/第十步.png)
+
+![例图](./resources/第十一步.png)
+
+![例图](./resources/第十二步.png)
+
+![例图](./resources/第十三步.png)
+
+熟悉SpringMVC 的同学应该都知道applicationContext.xml中配置的意义。如果对上面步骤不明白的可以使用邮箱与我沟通（coderchenyulin@163.com）
+#### 八、配置数据源
+- JNDI配置方式：使用<jee:jndi-lookup>元素将配置信息装配到Spring中，如下所示
+```
+<jee:jndi-lookup id="dataSource" jndi-name="/jdbc/myDBconfig" resource-ref="true"/>
+```
+上述介绍方式是xml配置，也可以使用java配置。如下图：
+![例图](./resources/jndiJava配置.png)
+
+- **基于JDBC配置**：Spring实现的数据源配置方式，有三个类支持该配置。分别是：DriverManagerDataSource、SimpleDriverDataSource、SingleConnectionDataSource.
+- **使用连接池**：与第三方连接池整合，比如c3p0
+- **使用内嵌数据库**：通常，内嵌数据库建议在开发或者测试条件下使用，嵌入式数据库比如有H2.在xml中可以这么配置以使用内嵌数据库H2.
+```
+<!--必须确保H2数据库在类路径下面 -->
+<jdbc:embeded-datasource id="dataSource" type="H2">
+    <jdbc:script location="xxx/xxx/xxx/schema.sql"/>
+    <jdbc:script location="xxx/xxx/xxx/testData.sql"/>
+</jdbc:embeded-datasource>
+```
+
+#### 九、数据持久化
+- **ORM框架**：mybatis、hibernate,需要下载第三方jar包，并针对不同的ORM框架有不同的配置方法，统一的步骤是为ORM框架设置数据源。mybatis相对灵活，可以自行编写SQL语句。
+
+  mybatis的大致配置步骤：
+  （1）准备相关jar包（2）配置数据源bean（3）编写mybatis 全局配置信息（xml文件）（4）配置SqlSessionFactory bean（5）配置MapperScannerConfigurer bean（将dao接口动态实现并注入spring容器中）
+
+- **jdbcTemplate**:Spring 封装好的数据库操作模板，和Java原本的jdbc技术相比，springJDBC将通用的操作比如建立连接、关闭连接、异常捕获等代码封装起来，让程序员更专注于数据库的CRUD.
+- **Redis**:Spring 提供了对Redis数据库操作的封装，即RedisTemplate,使用Redis只需要创建redis连接工厂bean,并为RedisTemplate的实例设置连接工厂bean即可。通过RedisTemplate 的实例就可以完成数据的缓存。
+
   
