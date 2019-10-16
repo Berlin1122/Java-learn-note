@@ -1,10 +1,195 @@
 # Java8新特性学习
 
-1. Stream
+1. 函数式编程
+2. Stream
+3. Optional
 
-2. Optional
+## 函数式编程
 
-3. 函数式编程
+函数式编程中，我们需要搞明白的问题是：谁调用函数？函数怎么实现？java8的做法是，用接口（interface）调用函数,函数的实现使用lambda表达式或者函数引用，这个接口通常只有一个函数，java把这个接口叫做函数式接口。
+
+### lambda表达式
+
+lambda表达式本身是函数的实现，比较直观的一种写法是：
+
+```java
+(args)->{statements;} //比较直观的看到参数和方法体
+```
+
+比如用lambda表达式重写Runnable的run()方法：
+
+```java
+//使用lamda表达式创建线程
+new Thread(()->{System.out.println("create thread use lamda");})
+    .start();
+```
+
+### 方法引用
+
+语法如下：
+
+1. 类名::函数名
+2. 对象名::函数名
+
+使用方法引用时需注意方法是类的方法还是实例的方法，这个区别决定了如何选择上述的引用方式。
+
+```java
+public class Test {
+
+    public static void testPrint1(String msg){
+        System.out.println(msg+" use testPrint1");
+    }
+
+    public void testPrint2(String msg){
+        System.out.println(msg+" use testPrint2");
+    }
+
+    public static void main(String[] args) {
+        //使用"类名::方法名"进行引用
+        Help help = Test::testPrint1;
+        help.print("Help");
+
+        //使用使用"类名::方法名"进行引用，略微复杂，因为引用的是实例的方法，所以需要提供一个实例
+        Help2 help2 = Test::testPrint2;
+        Test test1 = new Test();
+        help2.print(test1,"Help2");
+
+        //使用"对象::方法名"进行引用
+        Test test = new Test();
+        Help help1 = test::testPrint2;
+        help1.print("Help");
+    }
+}
+
+interface Help{
+    void print(String msg);
+}
+
+interface Help2{
+    void print(Test test,String msg);
+}
+```
+
+除了使用接口对静态函数、实例函数进行引用之外，还可以对构造函数进行引用。例子如下：
+
+```java
+public class Test {
+
+    public static void main(String[] args) {
+        
+        StudentMaker1 maker1 = Student::new;
+        Student stu1 = maker1.makeStudent("name1");
+        
+        StudentMaker2 maker2 = Student::new;
+        maker2.makeStudent("name2",20);
+        
+    }
+}
+
+class Student{
+    String name;
+    int age;
+
+    public Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public Student(String name) {
+        this.name = name;
+    }
+}
+
+interface StudentMaker1{
+    Student makeStudent(String name);
+}
+interface StudentMaker2{
+    Student makeStudent(String name,int age);
+}
+```
+
+### 函数式接口
+
+函数式接口指的是：接口中只有一个抽象方法，并且使用@FunctionalInterface注解标识了这个接口
+
+Java8中函数编程思想体现在使用接口调用函数，而函数的实现可以使用lambda和函数引用来实现。开发中，我们可能会需要各种函数，比如没有返回值没有参数的函数、有两个参数并且有返回类型的函数...为了让我们更方便的进行函数式编程，JDK中内置了很多函数式接口，基本可以满足我们的使用。
+
+![](./resources/函数式接口表格1.png)
+
+![](./resources/函数式接口表格2.png)
+
+### 高阶函数
+
+产生函数的函数
+
+```java
+interface FuncSS extends Function<String, String> {
+  
+} 
+
+public class ProduceFunction {
+  
+  //函数produce()的返回值是lambda表达式，即函数返回函数
+  static FuncSS produce() {
+    return s -> s.toLowerCase(); 
+  }
+  public static void main(String[] args) {
+    //使用自定义的FuncSS接收produce()的返回值
+    FuncSS f = produce();
+    System.out.println(f.apply("YELLING"));
+  }
+}
+```
+
+
+
+### 函数组合
+
+多个函数进行组合生成新的函数。
+
+- f1.compose(f2)		//执行f2之后执行f1
+
+- f1.andThen(f2)		//执行f1之后执行f2
+- f1.and(f2)				//逻辑与
+- f1.or(f2)					//逻辑或
+- f1.negate()      	//逻辑否
+
+```java
+public class Test {
+
+    static Function<String,String> f1 = s->s.toUpperCase();
+    static Function<String,String> f2 = s->s.substring(2);
+    static Function<String,String> f3= s->s.replace('S','*');
+    static Function<String,String> f4= f1.compose(f2).andThen(f3);  //执行顺序：f2->f1->f3
+
+    public static void main(String[] args) {
+        System.out.println(f4.apply("test test test"));
+        //运行结果：*T TE*T TE*T
+    }
+
+}
+```
+
+
+
+```java
+public class PredicateComposition {
+    
+  static Predicate<String>
+    p1 = s -> s.contains("bar"),
+    p2 = s -> s.length() < 5,
+    p3 = s -> s.contains("foo"),
+    p4 = p1.negate();//.and(p2).or(p3);
+    
+  public static void main(String[] args) {
+    Stream.of("bar", "foobar", "foobaz", "fongopuckey")
+      .filter(p4)
+      .forEach(System.out::println);
+  }
+}
+```
+
+
 
 ## 流（Stream）
 
@@ -173,6 +358,8 @@ public class Demo4 {
 
 ### 流的终端操作
 
+- 转化为集合
+
 ```java
 public class Demo5 {   
     
@@ -198,8 +385,63 @@ public class Demo5 {
         List<String> strings = new ArrayList<>();     
         strings.add("hello");      
         strings.add("world");        
-        List<String> strings2 = strings.stream().sorted().collect(Collectors.toList());    }}
+        List<String> strings2 = strings.stream().sorted().collect(Collectors.toList());  
+    }
+}
 ```
+
+- 分组后转化为Map对象
+
+  Student的stream()方法可以随机产生Stream\<Student\>
+
+  ```java
+  public class Test {
+  
+      public static void main(String[] args) {
+          testGroupBy();
+      }
+  	//学生类的属性：name,age,score
+      //根据学生的分数，将学生分组，[90,100]区间：VeryGood,其他：NotBad
+      //使用了Collectors.groupingBy(oneArg),此时键是lambda函数产生的，值则是当前流的元素
+      static void testGroupBy(){
+          Map<String,List<Student>> map = Student.stream()
+                  .limit(10)
+                  .collect(Collectors.groupingBy((stu)->{
+                      if(stu.getScore() >= 90 && stu.getScore() <= 100)
+                          return "VeryGood";
+                      else{
+                          return "NotBad";
+                      }
+                  }));
+      }
+      
+      //Function.identity()产生map中的键，Collectors.counting()产生map中的值
+      static void testGroupBy2(){
+          Stream<String> fruitStream = Arrays.asList("apple","banana","apple")
+              .stream();
+          Map<String,Long> map = fruitStream
+             .collect(Collectors.groupingBy(Function.identity(),Collectors.counting()));
+          //结果：[apple:2,banana:1]
+      }
+      
+          //组合属性进行groupBy(),需求：将成绩大于90并且age>20的列为"Top"组，剩余的列为"Other"组
+      static void testGroupBy3(){
+          Map<String,List<Student>> map = Student.stream()
+                .limit(20).
+                collect(Collectors.groupingBy(Test::byAgeAndScore));
+      }
+  
+      static String byAgeAndScore(Student stu){
+          if(stu.getScore() > 90 && stu.getAge() > 20){
+              return "Top";
+          }else
+              return "Other";
+      }
+  
+  }
+  ```
+
+  
 
 ## Optional类
 
@@ -309,3 +551,6 @@ static void convertToOptionalStream(){
         .forEach(System.out::println);
 }
 ```
+
+
+
