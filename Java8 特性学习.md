@@ -1,4 +1,16 @@
-## 创建流的方式
+# Java8新特性学习
+
+1. Stream
+
+2. Optional
+
+3. 函数式编程
+
+## 流（Stream）
+
+Stream用来将集合或者数组中的元素进行一系列的中间操作（元素过滤、元素排序、元素映射等），最后产出一个结果（转换为数组、集合等）
+
+### 创建流的方式
 
 - 第一种创建流的方式：使用Stream.of()方法
 
@@ -94,9 +106,7 @@
   }
   ```
 
-
-
-## 流的中间操作
+### 流的中间操作
 
 ```java
 //流的中间操作
@@ -161,9 +171,7 @@ public class Demo4 {
 }
 ```
 
-
-
-## 流的终端操作
+### 流的终端操作
 
 ```java
 public class Demo5 {   
@@ -191,4 +199,113 @@ public class Demo5 {
         strings.add("hello");      
         strings.add("world");        
         List<String> strings2 = strings.stream().sorted().collect(Collectors.toList());    }}
+```
+
+## Optional类
+
+将对象存储于Optional对象中，可以很方便的对对象进行判空，有效的简化代码（不再频繁使用if对null判断），优雅地解决了空指针问题。
+
+### 创建Optional对象
+
+```java
+//使用Optional类中的三个静态方法创建Optional对象
+static void testCreateOptional(){    
+    //创建空的Optional对象，此对象总不含值，调用get()方法会报java.util.NoSuchElementException: No value present    
+    Optional<String> strOpt = Optional.empty();    
+    //创建具有value的Optional对象，不能使用null作为of()的参数，会报空指针异常，调用get()可以获得value    
+    Optional<String> strOpt2 = Optional.of("a value");    
+    //创建一个value为null或者非null的Optional对象    
+    Optional<String> strOp3 = Optional.ofNullable(null);
+}
+```
+
+### Optional的便捷函数
+
+为了方便的测试Optional提供的方法，此处创建一个Student 类（这个类可以调用stream()方法获取一个随机产生的Stream\<Student\>对象）
+
+```java
+class Student{    
+    String name;    
+    int age;    
+    public Student(String name, int age) {        
+        this.name = name;        
+        this.age = age;    
+    }    
+	//省略setter和getter方法  
+    @Override    
+    public String toString() {        
+        return name;    
+    }    
+    private static Random r = new Random(47);    
+    public static Student generateStu(){        
+        int i = r.nextInt(4);        
+        Student stu;        
+        switch (i){            
+            case 0:                
+                stu = new Student("name0",20);break;            
+            case 1:                
+                stu = new Student("name1",20);break;            
+            case 2:                
+                stu = new Student("name2",20);break;            
+            default:                
+                stu = null;        
+        }        
+        return stu;    
+    }    
+    public static Stream<Optional<Student>> stream(){        
+        return Stream.generate(Student::generateStu)
+            .map(student -> Optional.ofNullable(student));    
+    }
+}
+```
+
+测试Optional对象的便捷的函数
+
+```java
+//测试ifPresent(func),orElse(otherObject),orElseGet(Supplier),orElseThrow(Supplier)
+static void testOptioalMethods(){    
+    //如果Optinal中的对象不为空，这三个函数都可以直接返回Optional中的对象
+    //orElse(otherObject)：如果值存在则直接返回，否则生成 otherObject。
+    //orElseGet(Supplier)：如果值存在则直接返回，否则使用 Supplier 函数生成一个可替代对象。 
+    //orElseThrow(Supplier)：如果值存在直接返回，否则使用 Supplier 函数生成一个异常。
+    Optional<Student> stuOpt = Optional.of(new Student("name0",20));    
+    
+    //由于stuOpt中有Student对象，因此下面可以取出Student对象并执行相关操作 
+    stuOpt.ifPresent(item->System.out.println(item.getName()));    
+    //由于stuOpt中有Student对象,因此下面返回的对象是“name0”的对象，不创建新的对象    
+    Student stu = stuOpt.orElse(new Student("name1",20));    
+    //由于stuOpt中有Student对象,因此下面返回的对象是“name0”的对象，不创建新的对象    
+    Student stu2 = stuOpt.orElseGet(()-> new Student("name2",20));    
+    try {        
+        //由于stuOpt中有Student对象,因此下面返回的对象是“name0”的对象，不进入异常捕捉 
+        Student stu3 = stuOpt.orElseThrow(()->new Exception("No Object In Optional")); 
+    } catch (Exception e) {        
+        System.out.println(e);    
+    }    
+    //经过测试：stu,stu2,stu3均指向同一个对象：name0    
+    //如果stuOpt中没有对象，则stu->name1,stu2->name2,stu3->进入异常catch
+}
+```
+
+此外，Optional对象还有一个isPresent()函数，返回值为boolean类型，用于判断Optional对象中是否有对象。
+
+### 包装Optional流、解包装
+
+上面的Student类中有一个stream()方法用于产生Stream<Optional\<Student\>> 流，下面的代码演示如何将Stream<Optional\<Student\>> 流转为Stream\<Student\>流
+
+```java
+//将普通对象的流包装成Optional流，并解包。
+static void convertToOptionalStream(){    
+    //此处得到的流是Optional<Student>流    
+    Student.stream()            
+        .limit(8)            
+        .forEach(System.out::println);        
+    //filter()过滤掉含空值的Optional<Student>对象，    
+    // map()将Optional中的Student对象提取出来，最后得到Stream<Student>流    
+    Student.stream()            
+        .limit(8)            
+        .filter(Optional::isPresent)            
+        .map(Optional::get)            
+        .forEach(System.out::println);
+}
 ```
