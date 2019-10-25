@@ -1,5 +1,15 @@
 # Mysql学习笔记
 
+
+
+## Mysql体系结构图
+
+![](./resources/Mysql体系结构.jpg)
+
+
+
+## 概念解释
+
 InnoDB引擎层提供redolog,Server层提供binlog
 
 redolog:记录在什么数据页上发生了什么修改
