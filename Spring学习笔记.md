@@ -1,7 +1,7 @@
 # Spring 实战note
 
 ### 一、Spring配置Bean
-- **xml文件配置方式**：在xml文件中，引入命名空间，使用<beans></beans>标签将需要配置的bean包含进来。**获取bean的方式：** 使用ApplicationContext实现类中的ClassPathXmlApplicationContext类来读取xml文件，再从这个上下文中获取bean.
+- **xml文件配置方式**：在xml文件中，引入命名空间，使用\<beans>\</beans>标签将需要配置的bean包含进来。**获取bean的方式：** 使用ApplicationContext实现类中的ClassPathXmlApplicationContext类来读取xml文件，再从这个上下文中获取bean.
 
 - **java配置方式**:使用`@Component`注解将某个类声明为组件，再新建配置类，使用`@Configuration`声明。启用`@ComponentScan`注解扫描指定路径的带`@Component`注解的类，再创建基于注解的上下文对象，使用 **配置类.class** 初始化这个对象就可以从中获取bean了。或者在主类上使用`@ContextConfiguration(class=配置类.class)`，再使用`@AutoWired`注入对象。这是获取组件的方式，还有一个方式是在被声明为配置类的类里面，在方法上使用`@Bean`注解，将方法标注为一个产生对象的方法。这样通过这个配置类也能获取上下文中的bean.
 
@@ -38,7 +38,7 @@
 - <aop:aspectj-autoproxy/> 在xml配置文件中开启自动代理，对应于@EnableAspectJProxy注解
 
 ### 四、SpringEL（Spring表达式）
-- 形如 **#{...}**，使用SpringEL可以结合@Value()注解给变量赋值，或者在xml配置文件中作为<bean></bean> 的value、ref属性。
+- 形如 **#{...}**，使用SpringEL可以结合@Value()注解给变量赋值，或者在xml配置文件中作为\<bean>\</bean> 的value、ref属性。
 - 使用SpringEL可以**表示字面值、获取bean及bean的属性和方法、使用JDK的类、使用运算符、正则匹配、计算集合。**
 
 ### 五、SpringAOP
