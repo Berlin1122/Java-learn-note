@@ -5,7 +5,7 @@
 
 - **java配置方式**:使用`@Component`注解将某个类声明为组件，再新建配置类，使用`@Configuration`声明。启用`@ComponentScan`注解扫描指定路径的带`@Component`注解的类，再创建基于注解的上下文对象，使用 **配置类.class** 初始化这个对象就可以从中获取bean了。或者在主类上使用`@ContextConfiguration(class=配置类.class)`，再使用`@AutoWired`注入对象。这是获取组件的方式，还有一个方式是在被声明为配置类的类里面，在方法上使用`@Bean`注解，将方法标注为一个产生对象的方法。这样通过这个配置类也能获取上下文中的bean.
 
-### 二、一些注解的作用
+### 二、一些常用注解
 ```
 @Import(Configuration.class)        /* 将某个配置类导入 */
 @Configuration                      /* 将某个类声明为配置类，在类里面创建Bean */
@@ -40,10 +40,13 @@
 ### 四、SpringEL（Spring表达式）
 - 形如 **#{...}**，使用SpringEL可以结合@Value()注解给变量赋值，或者在xml配置文件中作为<bean></bean> 的value、ref属性。
 - 使用SpringEL可以**表示字面值、获取bean及bean的属性和方法、使用JDK的类、使用运算符、正则匹配、计算集合。**
-- 
 
 ### 五、SpringAOP
-- 难点：切面中引入接口和接口实现类，为切面增加新的功能(书中所讲的是，使用接口引入这种方式，可以动态的让目标类实现某个接口，实现“java 多继承”)，涉及@DeclareParents()注解。可以参考[这篇文章](https://blog.csdn.net/zhousanlong/article/details/21614093)
+
+- 切面：Spring中切面是一个Java bean，其中的方法是为了给目标对象的方法增加功能。通过@Before()、@After等注解，声明在目标对象方法的何处增加功能。因此，切面定义了“做什么”，“在哪里”。
+- 切点：切点的作用是用来确定切面逻辑将用于哪个目标对象的方法，或者目标注解（当使用了某个指定注解）。
+- 连接点：连接点是指调用了目标方法的地方、使用了目标注解的地方，这些地方都可以称为连接点。
+- 引入接口：切面中引入接口和接口实现类，为切面增加新的功能(书中所讲的是，使用接口引入这种方式，可以动态的让目标类实现某个接口，实现“java 多继承”)，涉及@DeclareParents()注解。可以参考[这篇文章](https://blog.csdn.net/zhousanlong/article/details/21614093)
 
 ### 六、Spring MVC
 - **Java配置方式**：使用JavaConfig方式配置SpringMVC，要求服务器支持Servlet3.0.配置SpringMVC，最重要的步骤就是配置DispatcherServlet,使用Java配置方式，需要自定义一个类，继承`AbstractAnnotationConfigDispatcherServletInitializer`,拓展了这个类的自定义类，通过实现其中的方法，可以实现DispatcherServlet的配置以及Spring上下文的配置。下图是一个例子：
