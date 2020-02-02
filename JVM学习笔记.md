@@ -32,7 +32,9 @@ Java进程的内存区域分为：方法区、堆、虚拟机栈、本地方法�
 | ----------------------- | ------------------------------------------------------ |
 | -Xms                    | -Xms10M 堆内存最小值设为10MB                           |
 | -Xmx                    | -Xmx10M 堆内存最大值设为10MB                           |
+| -Xmn                    | -Xmn5M 新生代内存设为5M                                |
 | -Xss                    | -Xss128K 虚拟机栈的容量设为128KB                       |
+| -XX:SurvivorRatio       | -XX:SurvivorRatio=8 Eden:Survivor=8:1                  |
 | -XX:MetaspaceSize       | -XX:MetaspaceSize=10M 元空间容量大小设为10MB           |
 | -XX:MaxMetaspaceSize    | -XX:MaxMetaspaceSize=10M 元空间最大容量设置为10MB      |
 | -XX:MaxDirectMemorySize | -XX:MaxDirectMemorySize=10M 最大的直接内存容量设为10MB |
@@ -126,15 +128,16 @@ Java进程的内存区域分为：方法区、堆、虚拟机栈、本地方法�
 
 7. 垃圾收集器
 
-   | 收集器            | 算法      | 回收区域 | 组合                     |
-   | ----------------- | --------- | -------- | ------------------------ |
-   | Serial            | 标记-复制 | 新生代   | Serial Old               |
-   | ParNew            | 标记-复制 | 新生代   | CMS                      |
-   | CMS               | 标记清除  | 老年代   | ParNew                   |
-   | Parallel Scavenge | 标记-复制 | 新生代   | Serial Old、Parallel Old |
-   |                   |           |          |                          |
-   |                   |           |          |                          |
-   |                   |           |          |                          |
+   | 收集器            | 算法      | 回收区域    | 组合                     |
+   | ----------------- | --------- | ----------- | ------------------------ |
+   | Serial            | 标记-复制 | 新生代      | Serial Old               |
+   | ParNew            | 标记-复制 | 新生代      | CMS                      |
+   | Parallel Scavenge | 标记-复制 | 新生代      | Serial Old、Parallel Old |
+   | SerialOld         | 标记-整理 | 老年代      | Serial                   |
+   | CMS               | 标记-清除 | 老年代      | ParNew                   |
+   | Parallel Old      | 标记-整理 | 老年代      | Parallel Scavenge        |
+   | G1                | 整理+复制 | 堆区+方法区 |                          |
+   |                   |           |             |                          |
 
    Serial：适用于客户端Java应用
 
@@ -144,10 +147,31 @@ Java进程的内存区域分为：方法区、堆、虚拟机栈、本地方法�
 
    ParNew + CMS的组合方案，JDK9之后不再推荐使用，使用G1收集器替代这个组合。
 
-   Parallel Scavenge：关注的是吞吐量。推荐使用-XX:+UseAdptiveSizePlicy参数开启自适应调节各参数以获得最好的吞吐量。使用-XX:MaxGCPauseMillis参数设置允许内存回收的时间不过该值，单位是毫秒。-XX:GCTimeRatio 参数表示垃圾收集时间占总时间的比率，参数的值在[1-99]之间。
+   Parallel Scavenge：关注的是吞吐量。推荐使用-XX:+UseAdptiveSizePlicy参数开启自适应调节各参数以获得最好的吞吐量。使用-XX:MaxGCPauseMillis参数设置允许内存回收的时间不过该值，单位是毫秒。-XX:GCTimeRatio 参数表示垃圾收集时间占总时间的比率，参数的值在[1-99]之间，假设 GCTimeRatio 的值为 n，那么系统将花费不超过 1/(1+n) 的时间用于垃圾收集。
    $$
    吞吐量 = （运行用户代码时间）/(运行用户代码时间+运行垃圾收集时间)
    $$
-   
+   SerialOld：适用于客户端Java应用
 
-8. 
+   Parallel Old：适用于服务端垃圾收集，多线程并发收集，关注吞吐量。是Parallel Scavenge的老年代版本。
+
+   G1：适用于服务端Java应用，JDK9之后，替代了Parallel Scavenge+Parallel Old组合，成为服务端模式下的默认收集器。
+
+   何时触发Old GC 、Full GC、方法区GC？
+
+8. **对象分配空间流程图**
+
+   ![](./resources/对象分配空间流程图.png)
+
+## IV.GC机制相关参数（部分）
+
+| 参数                               | JDK9对应参数 | 解释                                     |
+| ---------------------------------- | ------------ | ---------------------------------------- |
+| -XX:+PrintGC                       | -Xlog:gc     | 打印GC日志                               |
+| -XX:+PrintGCDetails                | -Xlog:gc*    | 打印详细GC日志                           |
+| -XX:PretenureSizeThreshold=3145728 |              | 设置大对象阈值为3145728字节              |
+| -XX:MaxTenuringThreshold=5         |              | 设置Survivor中的对象进入老年代的年龄阈值 |
+| -XX:+/-HandlePromotionFailure      |              | 允许/不允许分配担保失败冒险              |
+|                                    |              |                                          |
+|                                    |              |                                          |
+
